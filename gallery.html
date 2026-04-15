@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>JanusMesh — Gallery</title>
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet" href="./static/css/gallery-page.css">
+  <link rel="icon" href="./static/images/favicon.svg">
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+</head>
+<body class="jm-gal-body">
+
+<header class="jm-gal-hero">
+  <h1 class="jm-gal-title">
+    JanusMesh：Fast and Zero-Shot 3D Visual Illusion Generation<br>
+    via Cross-Space Denoising
+  </h1>
+  <a href="./index.html" class="jm-gal-back">← Back to project page</a>
+</header>
+
+<main class="jm-gal-main">
+  <div class="jm-gal-grid">
+    <a href="./pages/2-object-clip.html" class="jm-gal-card">
+      <div class="jm-gal-thumb">
+        <video muted autoplay loop playsinline preload="metadata">
+          <source src="./static/result/2-object(CLIP_rotation)/(1)a peacock+a pineapple_ours.mp4" type="video/mp4">
+        </video>
+      </div>
+      <div class="jm-gal-name">2-Object (CLIP rotation)</div>
+      <span class="jm-gal-pill" id="badge-2object-clip">… →</span>
+    </a>
+    <a href="./pages/2-object-fix.html" class="jm-gal-card">
+      <div class="jm-gal-thumb">
+        <video muted autoplay loop playsinline preload="metadata">
+          <source src="./static/result/2-object(fix_angle)/(1)a sofa+open book_ours.mp4" type="video/mp4">
+        </video>
+      </div>
+      <div class="jm-gal-name">2-Object (fixed angle)</div>
+      <span class="jm-gal-pill" id="badge-2object-fix">… →</span>
+    </a>
+    <a href="./pages/3-object.html" class="jm-gal-card">
+      <div class="jm-gal-thumb">
+        <video muted autoplay loop playsinline preload="metadata">
+          <source src="./static/result/3-object/(1)Bamboo+A Pineapple+Grapes.mp4" type="video/mp4">
+        </video>
+      </div>
+      <div class="jm-gal-name">3-Object</div>
+      <span class="jm-gal-pill" id="badge-3object">… →</span>
+    </a>
+  </div>
+</main>
+
+<script src="./static/js/gifs.js"></script>
+<script>
+  (function () {
+    var c = MEDIA_CATEGORIES['2-object-clip'].files.length;
+    var f = MEDIA_CATEGORIES['2-object-fix'].files.length;
+    var o = MEDIA_CATEGORIES['3-object'].files.length;
+    document.getElementById('badge-2object-clip').textContent = c + ' videos →';
+    document.getElementById('badge-2object-fix').textContent = f + ' videos →';
+    document.getElementById('badge-3object').textContent = o + ' videos →';
+  })();
+</script>
+</body>
+</html>
