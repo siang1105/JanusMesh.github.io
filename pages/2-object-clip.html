@@ -4,24 +4,73 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>JanusMesh — 2-Object (CLIP rotation)</title>
-  <link rel="stylesheet" href="../static/css/supplementary-common.css">
+  <link rel="stylesheet" href="../static/css/supplementary-common.css?v=2026-04-27-en">
   <link rel="icon" href="../static/images/favicon.svg">
+  <style>
+    .compare-page .compare-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0.5rem 0.5rem;align-items:start}
+    @media (max-width:1200px){.compare-page .compare-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+    @media (max-width:720px){.compare-page .compare-grid{grid-template-columns:1fr}}
+  </style>
 </head>
-<body>
+<body class="compare-page">
   <center>
     <br>
     <div class="section">JanusMesh: Fast and Zero-Shot</div>
     <div class="section">3D Visual Illusion Generation via Cross-Space Denoising</div>
     <br>
     <div class="subsubsection">2-object 3D illusions (CLIP-guided rotation viewpoint)</div>
-    <a href="../index.html" class="back-link">
+    <a href="../gallery.html" class="back-link">
       <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
       Back
     </a>
-    <div class="gif-container">
-      <div class="gif-title" id="gifTitle">Loading…</div>
-      <div class="gif-wrapper">
-        <video id="mainGif" controls muted loop playsinline preload="metadata"></video>
+    <div class="gif-container compare-gif-container">
+      <h2 class="compare-main-title" id="gifTitle">Loading…</h2>
+      <div class="compare-grid">
+        <div class="compare-column">
+          <div class="compare-method-header">
+            <strong>Baseline (Shape From Semantic)</strong>
+            <span class="runtime">Runtime: ~40 min</span>
+          </div>
+          <div class="compare-video-card">
+            <video id="vidSfs" controls muted loop playsinline preload="metadata"></video>
+          </div>
+        </div>
+        <div class="compare-column">
+          <div class="compare-method-header">
+            <strong>Baseline (Direct Concatenation)</strong>
+            <span class="runtime">Runtime: ~3–5 min</span>
+          </div>
+          <div class="compare-video-card">
+            <video id="vidConcat" controls muted loop playsinline preload="metadata"></video>
+          </div>
+        </div>
+        <div class="compare-column">
+          <div class="compare-method-header">
+            <strong>Baseline (TRELLIS)</strong>
+            <span class="runtime">Runtime: ~1–2 min</span>
+          </div>
+          <div class="compare-video-card">
+            <video id="vidTrellis" controls muted loop playsinline preload="metadata"></video>
+          </div>
+        </div>
+        <div class="compare-column">
+          <div class="compare-method-header">
+            <strong>Baseline (dreambeast)</strong>
+            <span class="runtime">Runtime: ~3–4 hours</span>
+          </div>
+          <div class="compare-video-card">
+            <video id="vidDreambeast" controls muted loop playsinline preload="metadata"></video>
+          </div>
+        </div>
+        <div class="compare-column">
+          <div class="compare-method-header compare-method-header--ours">
+            <strong>Ours</strong>
+            <span class="runtime">Runtime: ~3–5 min</span>
+          </div>
+          <div class="compare-video-card">
+            <video id="vidOurs" controls muted loop playsinline preload="metadata"></video>
+          </div>
+        </div>
       </div>
       <div class="carousel-controls">
         <button type="button" class="nav-btn" id="prevBtn" aria-label="Previous">◀</button>
@@ -41,9 +90,9 @@
       </div>
     </div>
   </center>
-  <script src="../static/js/gifs.js"></script>
+  <script src="../static/js/gifs.js?v=2026-04-27-t0"></script>
   <script>
-    new GifCarousel('2-object-clip', 2);
+    new CompareCarousel('2-object-clip', 2);
   </script>
 </body>
 </html>

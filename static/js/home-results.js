@@ -8,7 +8,11 @@
   function mediaUrl(categoryKey, filename) {
     var c = MEDIA_CATEGORIES[categoryKey];
     var rel = c.basePath.replace(/^\.\.\/static\//, './static/');
-    return rel + encodeURIComponent(filename);
+    var q =
+      typeof RESULT_ASSET_CACHE_VER !== 'undefined'
+        ? '?v=' + RESULT_ASSET_CACHE_VER
+        : '';
+    return rel + encodeURIComponent(filename) + q;
   }
 
   function renderGrid(container, categoryKey, phases, pageIndex) {
