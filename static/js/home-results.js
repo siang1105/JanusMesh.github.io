@@ -47,10 +47,12 @@
     var root = document.getElementById(rootId);
     if (!root) return;
     var grid = root.querySelector('.jm-results-grid');
+    var pagination = root.querySelector('.jm-pagination');
     var prev = root.querySelector('.jm-results-prev');
     var next = root.querySelector('.jm-results-next');
     var label = root.querySelector('.jm-results-page-label');
-    var files = MEDIA_CATEGORIES[categoryKey].files;
+    // Home page only shows the first six examples (single page).
+    var files = MEDIA_CATEGORIES[categoryKey].files.slice(0, PAGE_SIZE);
     var totalPages = Math.max(1, Math.ceil(files.length / PAGE_SIZE));
     var page = 0;
 
@@ -59,6 +61,9 @@
       label.textContent = page + 1 + ' / ' + totalPages;
       prev.disabled = page <= 0;
       next.disabled = page >= totalPages - 1;
+      if (pagination) {
+        pagination.style.display = totalPages <= 1 ? 'none' : '';
+      }
     }
 
     prev.addEventListener('click', function () {

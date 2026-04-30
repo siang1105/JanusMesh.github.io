@@ -47,7 +47,7 @@ const MEDIA_CATEGORIES = {
  * Bumped when replacing any file under static/result/ so the browser fetches
  * new bytes (MP4s are often cached aggressively; on-disk = correct but tab still shows old).
  */
-var RESULT_ASSET_CACHE_VER = '20260427-t0';
+var RESULT_ASSET_CACHE_VER = '20260430-fix-turtle';
 
 function resultVideoUrl(basePath, filename) {
   return basePath + encodeURIComponent(filename) + '?v=' + RESULT_ASSET_CACHE_VER;
@@ -242,8 +242,51 @@ function compareClampTime(t, v) {
   return Math.max(0, Math.min(t, d - 0.02));
 }
 
+function comparePhaseShiftFrac(stem, role) {
+  var key = String(stem || '').trim().toLowerCase();
+  if (key === '(3)a pineapple+a fish' && role === 'ours') {
+    return 0.5;
+  }
+  if (key === '(2)cactus+purple succulent') {
+    if (role === 'trellis') return 0.5;
+    if (role === 'dreambeast') return 0;
+  }
+  if (key === '(3)a frog+a turtle' && role === 'trellis') {
+    return 0.5;
+  }
+  return role === 'sfs' || role === 'dreambeast' ? 0.5 : 0;
+}
+
+function compareMapSyncedTime(stem, anchorRole, anchorVideo, targetRole, targetVideo) {
+  if (!anchorVideo || !targetVideo) return 0;
+  var da = anchorVideo.duration;
+  var dt = targetVideo.duration;
+  if (!isFinite(da) || da <= 0 || !isFinite(dt) || dt <= 0) {
+    return compareClampTime(anchorVideo.currentTime || 0, targetVideo);
+  }
+  var anchorShift = comparePhaseShiftFrac(stem, anchorRole);
+  var targetShift = comparePhaseShiftFrac(stem, targetRole);
+  var progress = ((anchorVideo.currentTime / da) - anchorShift) % 1;
+  if (progress < 0) progress += 1;
+  var targetProgress = (progress + targetShift) % 1;
+  return compareClampTime(targetProgress * dt, targetVideo);
+}
+
+function compareStartTimeFor(stem, role, videoEl) {
+  var d = videoEl && isFinite(videoEl.duration) ? videoEl.duration : 0;
+  return compareClampTime(d * comparePhaseShiftFrac(stem, role), videoEl);
+}
+
 CompareCarousel.prototype._videos = function () {
   return [this.vidSfs, this.vidConcat, this.vidTrellis, this.vidDreambeast, this.vidOurs];
+};
+
+CompareCarousel.prototype._roleOfVideo = function (v) {
+  if (v === this.vidSfs) return 'sfs';
+  if (v === this.vidConcat) return 'concat';
+  if (v === this.vidTrellis) return 'trellis';
+  if (v === this.vidDreambeast) return 'dreambeast';
+  return 'ours';
 };
 
 CompareCarousel.prototype.setTripleSources = function (stem) {
@@ -279,9 +322,11 @@ CompareCarousel.prototype._applyStartTimeAndPlayCompare = function (stem, g, vid
   var self = this;
   if (g !== self._loadGen) return;
   self._vcSyncing = true;
-  vids.forEach(function (x) {
-    x.currentTime = compareClampTime(0, x);
-  });
+  self.vidSfs.currentTime = compareStartTimeFor(stem, 'sfs', self.vidSfs);
+  self.vidConcat.currentTime = compareStartTimeFor(stem, 'concat', self.vidConcat);
+  self.vidTrellis.currentTime = compareStartTimeFor(stem, 'trellis', self.vidTrellis);
+  self.vidDreambeast.currentTime = compareStartTimeFor(stem, 'dreambeast', self.vidDreambeast);
+  self.vidOurs.currentTime = compareStartTimeFor(stem, 'ours', self.vidOurs);
   self._vcSyncing = false;
   vids.forEach(function (x) {
     var p = x.play();
@@ -310,36 +355,43 @@ CompareCarousel.prototype.setupVideoSync = function () {
     });
     v.addEventListener('seeked', function () {
       if (self._vcSyncing) return;
-      var t = v.currentTime;
+      var anchorRole = self._roleOfVideo(v);
       var allClose = vids.every(function (x) {
-        return Math.abs(x.currentTime - t) < 0.05;
+        var targetRole = self._roleOfVideo(x);
+        var expected = compareMapSyncedTime(self._activeStem, anchorRole, v, targetRole, x);
+        return Math.abs(x.currentTime - expected) < 0.05;
       });
       if (allClose) return;
       self._vcSyncing = true;
       vids.forEach(function (x) {
-        x.currentTime = compareClampTime(t, x);
+        var targetRole = self._roleOfVideo(x);
+        x.currentTime = compareMapSyncedTime(self._activeStem, anchorRole, v, targetRole, x);
       });
       self._vcSyncing = false;
     });
   });
-  this.vidSfs.addEventListener('timeupdate', function () {
-    if (self._vcSyncing || self.vidSfs.paused) return;
-    var t = self.vidSfs.currentTime;
-    if (
-      Math.abs(self.vidConcat.currentTime - t) <= driftS &&
-      Math.abs(self.vidTrellis.currentTime - t) <= driftS &&
-      Math.abs(self.vidDreambeast.currentTime - t) <= driftS &&
-      Math.abs(self.vidOurs.currentTime - t) <= driftS
-    ) {
-      return;
-    }
-    self._vcSyncing = true;
-    [self.vidConcat, self.vidTrellis, self.vidDreambeast, self.vidOurs].forEach(function (x) {
-      if (Math.abs(x.currentTime - t) > driftS) {
-        x.currentTime = compareClampTime(t, x);
-      }
+  vids.forEach(function (anchor) {
+    anchor.addEventListener('timeupdate', function () {
+      if (self._vcSyncing || anchor.paused) return;
+      var anchorRole = self._roleOfVideo(anchor);
+      var needsSync = vids.some(function (x) {
+        if (x === anchor) return false;
+        var targetRole = self._roleOfVideo(x);
+        var targetTime = compareMapSyncedTime(self._activeStem, anchorRole, anchor, targetRole, x);
+        return Math.abs(x.currentTime - targetTime) > driftS;
+      });
+      if (!needsSync) return;
+      self._vcSyncing = true;
+      vids.forEach(function (x) {
+        if (x === anchor) return;
+        var targetRole = self._roleOfVideo(x);
+        var targetTime = compareMapSyncedTime(self._activeStem, anchorRole, anchor, targetRole, x);
+        if (Math.abs(x.currentTime - targetTime) > driftS) {
+          x.currentTime = targetTime;
+        }
+      });
+      self._vcSyncing = false;
     });
-    self._vcSyncing = false;
   });
 };
 
@@ -390,6 +442,7 @@ CompareCarousel.prototype.setupEventListeners = function () {
 CompareCarousel.prototype.updateCarousel = function () {
   var file = this.files[this.currentIndex];
   var stem = this.stem(file);
+  this._activeStem = stem;
   this.setTripleSources(stem);
   this.gifTitle.textContent = formatMediaTitle(file, this.phases);
   this.currentNum.textContent = this.currentIndex + 1;
