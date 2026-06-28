@@ -15,6 +15,19 @@
     return rel + encodeURIComponent(filename) + q;
   }
 
+  function startVideoPlayback(vid) {
+    vid.muted = true;
+    var play = function () {
+      var p = vid.play();
+      if (p && p.catch) p.catch(function () {});
+    };
+    if (vid.readyState >= 2) {
+      play();
+    } else {
+      vid.addEventListener('loadeddata', play, { once: true });
+    }
+  }
+
   function renderGrid(container, categoryKey, phases, pageIndex) {
     var cfg = MEDIA_CATEGORIES[categoryKey];
     var files = cfg.files;
@@ -25,11 +38,11 @@
       var cell = document.createElement('div');
       cell.className = 'jm-result-cell';
       var vid = document.createElement('video');
-      vid.setAttribute('muted', '');
-      vid.setAttribute('playsinline', '');
-      vid.setAttribute('loop', '');
-      vid.setAttribute('autoplay', '');
-      vid.setAttribute('preload', 'metadata');
+      vid.muted = true;
+      vid.playsInline = true;
+      vid.loop = true;
+      vid.autoplay = true;
+      vid.preload = 'metadata';
       var src = document.createElement('source');
       src.src = mediaUrl(categoryKey, file);
       src.type = 'video/mp4';
@@ -40,6 +53,7 @@
       cell.appendChild(vid);
       cell.appendChild(cap);
       container.appendChild(cell);
+      startVideoPlayback(vid);
     });
   }
 
